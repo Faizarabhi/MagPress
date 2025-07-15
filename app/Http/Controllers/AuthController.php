@@ -21,8 +21,8 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $request->role ? $request->role : 'journalist',
         ]);
-       /*  $token = Auth::login($user); */
        $token = Auth::guard('api')->login($user);
         return response()->json([
             'status' => 'Registration successful',
