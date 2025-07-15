@@ -22,7 +22,8 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
-        $token = Auth::login($user);
+       /*  $token = Auth::login($user); */
+       $token = Auth::guard('api')->login($user);
         return response()->json([
             'status' => 'Registration successful',
             'user' => $user,
@@ -44,19 +45,20 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
+        try{
+            $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
 
         $credentials = $request->only('email', 'password');
-        $token = Auth::attempt($credentials);
+        $token = Auth::guard('api')->attempt($credentials);
         if (!$token) {
             return response()->json([
                 'status' => 'Unauthorized',
             ])->setStatusCode(401, 'Unauthorized');
         }
-        $user = Auth::user();
+        $user = Auth::guard('api')->user();
         return response()->json([
             'status' => 'Login successful',
             'user' => $user,
@@ -64,6 +66,21 @@ class AuthController extends Controller
                 'token' => $token,
                 'type' => 'Bearer',
             ],
+        ])->setStatusCode(200, 'OK');
+        }catch(\Throwable $e){
+            return response()->json([
+                'status' => 'Login failed',
+                'message' => $e->getMessage(),
+            ])->setStatusCode(400, 'Bad Request');
+        }
+
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::guard('api')->logout();
+        return response()->json([
+            'status' => 'Logout successful',
         ])->setStatusCode(200, 'OK');
     }
 }
